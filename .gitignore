@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Virtual environment
+venv/
+vitenv/
+ENV/
+env/
+.vitenv/
+.vscode/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Model checkpoints & weights
+model/*.pt
+model/*.pth
+model/*.bin
+model/*.safetensors
+model/checkpoint-*/
+
+# Hugging Face trainer outputs
+runs/
+output/
+cache/
+*.lock
+
+# Docker / build
+*.egg-info/
+dist/
+build/
+
+# Secrets / configs
+*.env
+space.yaml  # if it contains tokens or private info

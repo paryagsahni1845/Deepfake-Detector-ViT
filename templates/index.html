@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Deepfake Detection</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #0f0f0f 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 80, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 120, 120, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 200, 255, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        #uploadForm {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 6s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            color: #b8b8b8;
+            font-weight: 300;
+        }
+        
+        .upload-container {
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .upload-label {
+            display: block;
+            padding: 40px 20px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-label::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .upload-label:hover::before {
+            left: 100%;
+        }
+        
+        .upload-label:hover {
+            border-color: rgba(120, 200, 255, 0.6);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(120, 200, 255, 0.2);
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-label:hover .upload-icon {
+            color: rgba(120, 200, 255, 0.8);
+            transform: scale(1.1);
+        }
+        
+        .upload-text {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+        
+        #imagePreview {
+            display: none;
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 15px;
+            margin: 20px auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            display: block;
+        }
+        
+        #imagePreview:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7);
+        }
+        
+        button {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        button:hover::before {
+            left: 100%;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+        }
+        
+        #imageSpinner {
+            display: none;
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .processing-text {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+        
+        #detectionResult {
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #ffffff;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        #detectionResult:not(:empty) {
+            animation: resultFadeIn 0.5s ease-out;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        @keyframes resultFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            #uploadForm {
+                padding: 20px 15px;
+                max-width: 95%;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+                margin-bottom: 15px;
+            }
+            
+            p {
+                font-size: 1rem;
+                margin-bottom: 30px;
+            }
+            
+            .upload-label {
+                padding: 25px 15px;
+            }
+            
+            .upload-icon {
+                font-size: 2.5rem;
+            }
+            
+            button {
+                padding: 12px 30px;
+                font-size: 1rem;
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            #imagePreview {
+                max-height: 300px;
+                margin: 15px auto;
+            }
+            
+            #detectionResult {
+                padding: 20px;
+                font-size: 1.1rem;
+                margin-top: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #uploadForm {
+                padding: 15px 10px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+                margin-bottom: 12px;
+            }
+            
+            p {
+                font-size: 0.9rem;
+                margin-bottom: 25px;
+            }
+            
+            .upload-label {
+                padding: 20px 10px;
+            }
+            
+            .upload-icon {
+                font-size: 2rem;
+            }
+            
+            .upload-text {
+                font-size: 1rem;
+            }
+            
+            button {
+                padding: 10px 25px;
+                font-size: 0.9rem;
+            }
+            
+            #imagePreview {
+                max-height: 250px;
+                margin: 12px auto;
+            }
+            
+            #detectionResult {
+                padding: 15px;
+                font-size: 1rem;
+                margin-top: 15px;
+            }
+            
+            #imageSpinner {
+                margin: 20px 0;
+                padding: 15px;
+            }
+            
+            .spinner {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .processing-text {
+                font-size: 1rem;
+            }
+        }
+        
+        /* Subtle animations for better UX */
+        * {
+            animation-duration: 0.3s;
+            animation-fill-mode: both;
+        }
+        
+        body {
+            animation-name: fadeIn;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <form id="uploadForm">
+        <h1>Deepfake Detection</h1>
+        <p>Upload an image to check if it's real or a deepfake.</p>
+        
+        <div class="upload-container">
+            <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)">
+            <label for="imageInput" class="upload-label">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Click to upload an image</div>
+            </label>
+        </div>
+        
+        <img id="imagePreview" src="#" alt="Image Preview" style="display: none;">
+        <br>
+
+        <button type="button" onclick="submitImage()">Analyze Image</button>
+
+        <div id="imageSpinner" style="display: none;">
+            <div class="spinner"></div>
+            <p class="processing-text">Processing...</p>
+        </div>
+
+        <h2 id="detectionResult"></h2>
+    </form>
+    
+    <script>
+        function previewImage(event) {
+            const imageInput = document.getElementById('imageInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const file = imageInput.files[0];
+
+            if (file) {
+                const url = URL.createObjectURL(file);
+                imagePreview.src = url;
+                imagePreview.style.display = 'block';
+            }
+        }
+
+        function submitImage() {
+            const imageInput = document.getElementById('imageInput');
+            const imageSpinner = document.getElementById('imageSpinner');
+            const detectionResult = document.getElementById('detectionResult');
+
+            const file = imageInput.files[0];
+
+            if (!file) {
+                alert('Please upload an image file.');
+                return;
+            }
+
+            imageSpinner.style.display = 'block';
+            detectionResult.innerHTML = '';
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            fetch('/predict', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    imageSpinner.style.display = 'none';
+
+                    detectionResult.innerHTML = `Prediction: ${data.prediction} <br> Confidence: ${data.confidence.toFixed(2)}`;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    detectionResult.innerHTML = 'An error occurred while processing the image.';
+                    imageSpinner.style.display = 'none';
+                });
+        }
+    </script>
+</body>
+</html>

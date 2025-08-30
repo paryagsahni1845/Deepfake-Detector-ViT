@@ -1,0 +1,13 @@
+accelerate
+pandas
+matplotlib
+seaborn
+tensorflow
+scikit-learn
+transformers
+numpy
+torch
+Flask
+Pillow
+gunicorn
+safetensors

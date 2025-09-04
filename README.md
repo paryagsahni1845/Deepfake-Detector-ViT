@@ -69,7 +69,7 @@ The final model, saved as `model.safetensors`, `config.json`, and `preprocessor_
 **Training Metrics:**
 - Training Time: 2 hours 6 minutes
 - Test Set Size: 76,161 images
-- Misclassifications: ~576 images
+- Misclassifications: ~582 images
 - Model Parameters: 85K trainable parameters
 
 ## User Interface and Experience
